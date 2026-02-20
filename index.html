@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lead Finder</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #fff;
+        color: #000;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+    }
+
+    .container {
+        width: 100%;
+        max-width: 800px;
+        padding: 40px 20px;
+    }
+
+    h1 {
+        font-weight: 600;
+        margin-bottom: 30px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 14px;
+    }
+
+    input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #000;
+        background: #fff;
+        color: #000;
+        font-size: 14px;
+    }
+
+    button {
+        padding: 12px 20px;
+        background: #000;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+    button:hover {
+        opacity: 0.8;
+    }
+
+    .loader {
+        margin: 30px 0;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #000;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        animation: spin 1s linear infinite;
+        display: none;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .results {
+        margin-top: 30px;
+    }
+
+    .lead {
+        border-top: 1px solid #000;
+        padding: 20px 0;
+    }
+
+    .lead h3 {
+        margin: 0 0 5px 0;
+    }
+
+    .lead a {
+        color: #000;
+        text-decoration: underline;
+        font-size: 14px;
+    }
+
+    .meta {
+        font-size: 14px;
+        margin-top: 8px;
+    }
+
+    .suggestion {
+        margin-top: 10px;
+        font-style: italic;
+        font-size: 13px;
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Lead Finder</h1>
+
+    <div class="form-group">
+        <label>Fraza kluczowa</label>
+        <input type="text" id="keyword" placeholder="np. architekt">
+    </div>
+
+    <div class="form-group">
+        <label>Miasto</label>
+        <input type="text" id="location" placeholder="np. Warszawa">
+    </div>
+
+    <div class="form-group">
+        <label>Liczba wyników (max 5)</label>
+        <input type="number" id="limit" max="5" min="1" value="5">
+    </div>
+
+    <button onclick="searchLeads()">Wyszukaj leady</button>
+
+    <div class="loader" id="loader"></div>
+
+    <div class="results" id="results"></div>
+</div>
+
+<script>
+async function searchLeads() {
+    const keyword = document.getElementById('keyword').value;
+    const location = document.getElementById('location').value;
+    const limit = document.getElementById('limit').value;
+
+    if (!keyword || !location) {
+        alert("Uzupełnij wszystkie pola.");
+        return;
+    }
+
+    document.getElementById('results').innerHTML = "";
+    document.getElementById('loader').style.display = "block";
+
+    // MOCK DATA (później podmienisz na webhook n8n)
+    setTimeout(() => {
+        const mockData = Array.from({ length: limit }, (_, i) => ({
+            name: `${keyword} ${i + 1} - ${location}`,
+            website: "https://example.com",
+            email: "kontakt@example.com",
+            description: "Firma specjalizująca się w usługach lokalnych. Działa na rynku od kilku lat i obsługuje klientów indywidualnych oraz biznesowych.",
+            suggestion: "Potencjalnie dobry lead jeśli oferujesz usługi B2B."
+        }));
+
+        renderResults(mockData);
+        document.getElementById('loader').style.display = "none";
+    }, 1500);
+
+
+    // DOCELowo:
+    /*
+    const response = await fetch("TWÓJ_WEBHOOK_N8N", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ keyword, location, limit })
+    });
+
+    const data = await response.json();
+    renderResults(data);
+    document.getElementById('loader').style.display = "none";
+    */
+}
+
+function renderResults(data) {
+    const container = document.getElementById('results');
+    container.innerHTML = "";
+
+    data.forEach(lead => {
+        const div = document.createElement("div");
+        div.className = "lead";
+        div.innerHTML = `
+            <h3>${lead.name}</h3>
+            <a href="${lead.website}" target="_blank">${lead.website}</a>
+            <div class="meta">Email: ${lead.email}</div>
+            <div class="meta">${lead.description}</div>
+            <div class="suggestion">${lead.suggestion}</div>
+        `;
+        container.appendChild(div);
+    });
+}
+</script>
+
+</body>
+</html>
