@@ -237,39 +237,59 @@ async function pollForResults(jobId, timer) {
     }, 15000); // Odpytywanie co 15 sekund = duża oszczędność WU
 }
 
-function renderResults(leads) {
+function renderResults(data) {
     const container = document.getElementById('results');
-    // Obsługa różnych formatów tablicy
-    const items = Array.isArray(leads) ? leads : (leads.leads || []);
+    container.innerHTML = ""; // Czyścimy loader
 
-    items.forEach(item => {
-        // Głębokie parsowanie pola 'output'
-        let lead;
-        try {
-            lead = typeof item.output === 'string' ? JSON.parse(item.output) : (item.output || item);
-        } catch(e) {
-            lead = item;
+    try {
+        // 1. Wyciągamy pole 'wynik' z pierwszego elementu tablicy n8n
+        let rawWynik = data[0].wynik;
+        
+        // 2. Pierwsze rozpakowanie (dostajemy obiekt z kluczem "wynik")
+        let firstParse = typeof rawWynik === 'string' ? JSON.parse(rawWynik) : rawWynik;
+        
+        // 3. Drugie rozpakowanie (wyciągamy tekstową tablicę z klucza "wynik")
+        let secondParse = typeof firstParse.wynik === 'string' ? JSON.parse(firstParse.wynik) : firstParse.wynik;
+        
+        const items = Array.isArray(secondParse) ? secondParse : [];
+
+        if (items.length === 0) {
+            container.innerHTML = "<p>Brak wyników do wyświetlenia.</p>";
+            return;
         }
 
-        const div = document.createElement("div");
-        div.className = "card";
-        
-        const emails = Array.isArray(lead.emails) ? lead.emails.join(", ") : (lead.email || "Nie znaleziono");
+        items.forEach(item => {
+            // 4. Trzecie rozpakowanie (wyciągamy dane z pola "output")
+            let lead;
+            try {
+                lead = typeof item.output === 'string' ? JSON.parse(item.output) : item;
+            } catch(e) {
+                lead = item;
+            }
 
-        div.innerHTML = `
-            <div class="lead-title">${lead.name || "Firma"}</div>
-            <div class="lead-website">
-                <a href="${lead.website}" target="_blank">${lead.website || "#"}</a>
-            </div>
-            <div class="section-label">Kontakt Email</div>
-            <div class="email">${emails}</div>
-            <div class="section-label">Analiza AI (Profil)</div>
-            <div class="description">${lead.description || "Brak danych."}</div>
-            <div class="section-label">Werdykt dla Górnej Półki</div>
-            <div class="suggestion">${lead.suggestion || "Brak danych."}</div>
-        `;
-        container.appendChild(div);
-    });
+            const div = document.createElement("div");
+            div.className = "card";
+            
+            const emails = Array.isArray(lead.emails) ? lead.emails.join(", ") : (lead.email || "Brak maila");
+
+            div.innerHTML = `
+                <div class="lead-title">${lead.name || "Firma"}</div>
+                <div class="lead-website">
+                    <a href="${lead.website}" target="_blank">${lead.website || "#"}</a>
+                </div>
+                <div class="section-label">Kontakt Email</div>
+                <div class="email">${emails}</div>
+                <div class="section-label">Analiza AI (Profil)</div>
+                <div class="description">${lead.description || "Brak opisu."}</div>
+                <div class="section-label">Werdykt dla Górnej Półki</div>
+                <div class="suggestion">${lead.suggestion || "Brak sugestii."}</div>
+            `;
+            container.appendChild(div);
+        });
+    } catch (err) {
+        console.error("Błąd parsowania:", err);
+        container.innerHTML = "<p>Błąd podczas przetwarzania danych: " + err.message + "</p>";
+    }
 }
 
 function stopUI(timer) {
