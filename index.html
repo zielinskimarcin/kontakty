@@ -255,6 +255,47 @@ function renderResults(leads) {
         return;
     }
 
+    leadsList.forEach(item => {
+        // KLUCZOWA POPRAWKA: Odpakowujemy pole "output", jeśli istnieje
+        let lead;
+        try {
+            lead = typeof item.output === 'string' ? JSON.parse(item.output) : item;
+        } catch (e) {
+            lead = item;
+        }
+
+        const div = document.createElement("div");
+        div.className = "card";
+        
+        const emails = Array.isArray(lead.emails) ? lead.emails.join(", ") : (lead.email || "Nie znaleziono");
+
+        div.innerHTML = `
+            <div class="lead-title">${lead.name || "Firma bez nazwy"}</div>
+            <div class="lead-website">
+                <a href="${lead.website}" target="_blank">${lead.website || "#"}</a>
+            </div>
+
+            <div class="section-label">Kontakt Email</div>
+            <div class="email">${emails}</div>
+
+            <div class="section-label">Analiza AI (Profil)</div>
+            <div class="description">${lead.description || "Brak szczegółowej analizy."}</div>
+
+            <div class="section-label">Werdykt dla Górnej Półki</div>
+            <div class="suggestion">${lead.suggestion || "Brak sugestii."}</div>
+        `;
+        container.appendChild(div);
+    });
+}
+    const container = document.getElementById('results');
+    // Obsługa przypadku, gdy leads to obiekt z kluczem, a nie czysta tablica
+    const leadsList = Array.isArray(leads) ? leads : (leads.leads || []);
+
+    if (leadsList.length === 0) {
+        container.innerHTML = "<p>Brak wyników spełniających kryteria.</p>";
+        return;
+    }
+
     leadsList.forEach(lead => {
         const div = document.createElement("div");
         div.className = "card";
