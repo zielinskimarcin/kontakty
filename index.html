@@ -6,126 +6,53 @@
 <title>Lead Finder</title>
 
 <style>
-    body {
-        font-family: Arial, sans-serif;
-        background: #fff;
-        color: #000;
-        margin: 0;
-        padding: 40px 20px;
-        display: flex;
-        justify-content: center;
-    }
-
-    .container {
-        width: 100%;
-        max-width: 700px;
-    }
-
-    h1 {
-        margin-bottom: 30px;
-        font-weight: 600;
-    }
-
-    .form-group {
-        margin-bottom: 20px;
-    }
-
-    label {
-        display: block;
-        margin-bottom: 6px;
-        font-size: 14px;
-    }
-
-    input {
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #000;
-        font-size: 14px;
-        background: #fff;
-        color: #000;
-    }
-
-    button {
-        padding: 12px 20px;
-        background: #000;
-        color: #fff;
-        border: none;
-        cursor: pointer;
-        font-size: 14px;
-    }
-
-    button:hover {
-        opacity: 0.8;
-    }
-
-    .loader {
-        margin: 30px 0;
-        border: 4px solid #f3f3f3;
-        border-top: 4px solid #000;
-        border-radius: 50%;
-        width: 30px;
-        height: 30px;
-        animation: spin 1s linear infinite;
-        display: none;
-    }
-
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-
-    .results {
-        margin-top: 30px;
-    }
-
-    .lead {
-        border-top: 1px solid #000;
-        padding: 20px 0;
-    }
-
-    .lead h3 {
-        margin: 0 0 5px 0;
-    }
-
-    .lead a {
-        color: #000;
-        text-decoration: underline;
-        font-size: 14px;
-    }
-
-    .error {
-        margin-top: 20px;
-        color: red;
-        font-size: 14px;
-    }
+body {
+    font-family: Arial, sans-serif;
+    background: #fff;
+    color: #000;
+    padding: 40px;
+    max-width: 700px;
+    margin: auto;
+}
+input, button {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #000;
+}
+button {
+    background: #000;
+    color: #fff;
+    cursor: pointer;
+}
+button:hover { opacity: 0.8; }
+.lead {
+    border-top: 1px solid #000;
+    padding: 15px 0;
+}
+.loader {
+    display: none;
+    margin: 20px 0;
+}
+.error {
+    color: red;
+    margin-top: 10px;
+}
 </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>Lead Finder</h1>
+<h1>Lead Finder</h1>
 
-    <div class="form-group">
-        <label>Fraza kluczowa</label>
-        <input type="text" id="keyword" placeholder="np. architekt">
-    </div>
+<input id="keyword" placeholder="Fraza (np. żłobek)">
+<input id="location" placeholder="Miasto (np. Białystok)">
+<input id="limit" type="number" value="5" max="5" min="1">
 
-    <div class="form-group">
-        <label>Miasto</label>
-        <input type="text" id="location" placeholder="np. Warszawa">
-    </div>
+<button onclick="searchLeads()">Wyszukaj</button>
 
-    <div class="form-group">
-        <label>Liczba wyników (max 5)</label>
-        <input type="number" id="limit" min="1" max="5" value="5">
-    </div>
-
-    <button onclick="searchLeads()">Wyszukaj leady</button>
-
-    <div class="loader" id="loader"></div>
-    <div class="error" id="error"></div>
-    <div class="results" id="results"></div>
-</div>
+<div class="loader" id="loader">Ładowanie...</div>
+<div class="error" id="error"></div>
+<div id="results"></div>
 
 <script>
 async function searchLeads() {
@@ -159,19 +86,17 @@ async function searchLeads() {
             })
         });
 
-        if (!response.ok) {
-            throw new Error("Błąd odpowiedzi serwera");
-        }
-
         const raw = await response.json();
-console.log("RAW RESPONSE:", raw);
+        console.log("RAW:", raw);
 
-const data = Array.isArray(raw) ? raw : raw.data || raw.json || [];
-console.log("PARSED DATA:", data);
+        // 🔥 KLUCZOWA LINIA
+        const data = Array.isArray(raw) ? raw : raw.data || raw.json || [];
 
-renderResults(data);
-
-        renderResults(data);
+        if (!data || data.length === 0) {
+            document.getElementById('results').innerHTML = "<p>Brak wyników.</p>";
+        } else {
+            renderResults(data);
+        }
 
     } catch (err) {
         document.getElementById('error').innerText = "Wystąpił błąd podczas pobierania leadów.";
@@ -186,11 +111,6 @@ function renderResults(data) {
     const container = document.getElementById('results');
     container.innerHTML = "";
 
-    if (!Array.isArray(data) || data.length === 0) {
-        container.innerHTML = "<p>Brak wyników.</p>";
-        return;
-    }
-
     data.forEach(lead => {
 
         const div = document.createElement("div");
@@ -199,6 +119,9 @@ function renderResults(data) {
         div.innerHTML = `
             <h3>${lead.name || "Brak nazwy"}</h3>
             ${lead.website ? `<a href="${lead.website}" target="_blank">${lead.website}</a>` : ""}
+            <div class="meta">Email: ${lead.email || "brak (tymczasowo)"}</div>
+            <div class="meta">${lead.description || "Opis firmy zostanie wygenerowany automatycznie."}</div>
+            <div class="suggestion">${lead.suggestion || "Sugestia kontaktu zostanie wygenerowana przez AI."}</div>
         `;
 
         container.appendChild(div);
