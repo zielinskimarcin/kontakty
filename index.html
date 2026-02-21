@@ -1,47 +1,3 @@
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lead Finder | Górna Półka</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f7f7f7; margin: 0; padding: 40px 20px; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 900px; }
-        h1 { font-weight: 700; margin-bottom: 30px; color: #111; text-align: center; }
-        .card { background: #ffffff; border-radius: 16px; padding: 24px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        input, button { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 16px; font-size: 15px; box-sizing: border-box; }
-        button { background: #000; color: #fff; border: none; cursor: pointer; font-weight: 600; transition: background 0.2s; }
-        button:hover { background: #333; }
-        button:disabled { background: #999; cursor: not-allowed; }
-        .loader-container { display: none; text-align: center; margin: 30px 0; }
-        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #000; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 15px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .loader-text { font-size: 14px; color: #555; line-height: 1.6; }
-        .lead-title { font-size: 18px; font-weight: 700; color: #000; margin-bottom: 6px; }
-        .lead-website a { color: #0070f3; text-decoration: none; font-size: 14px; }
-        .section-label { font-size: 11px; font-weight: 800; margin-top: 15px; margin-bottom: 4px; text-transform: uppercase; color: #888; letter-spacing: 0.5px; }
-        .email, .description, .suggestion { font-size: 14px; line-height: 1.5; color: #333; }
-        .error { color: #ff3b30; background: #fff5f5; padding: 10px; border-radius: 8px; margin-top: 10px; display: none; font-size: 14px; border: 1px solid #ffcccc; }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <h1>Lead Finder dla Górnej Półki</h1>
-    <div class="card">
-        <input id="keyword" placeholder="Czego szukasz? (np. architekt wnętrz)">
-        <input id="location" placeholder="Gdzie? (np. Warszawa)">
-        <input id="limit" type="number" value="3" min="1" max="10">
-        <button id="searchBtn" onclick="searchLeads()">Rozpocznij głęboką analizę</button>
-        <div class="loader-container" id="loaderContainer">
-            <div class="spinner"></div>
-            <div class="loader-text" id="loaderText">Inicjowanie agenta AI...</div>
-        </div>
-        <div class="error" id="error"></div>
-    </div>
-    <div id="results"></div>
-</div>
-
 <script>
 const URL_START = "https://mz01.app.n8n.cloud/webhook/lead-search";
 const URL_CHECK = "https://mz01.app.n8n.cloud/webhook/sprawdz-wynik";
@@ -51,7 +7,10 @@ async function searchLeads() {
     const location = document.getElementById('location').value.trim();
     const limit = document.getElementById('limit').value;
 
-    if (!keyword || !location) { alert("Wpisz frazę i miasto."); return; }
+    if (!keyword || !location) {
+        alert("Wpisz frazę i miasto.");
+        return;
+    }
 
     const btn = document.getElementById('searchBtn');
     const loader = document.getElementById('loaderContainer');
@@ -67,7 +26,8 @@ async function searchLeads() {
     let seconds = 0;
     const timer = setInterval(() => {
         seconds += 1;
-        loaderText.innerHTML = `Agent AI analizuje rynek... (${seconds}s)<br><small>Oszczędzam Twoje limity n8n</small>`;
+        loaderText.innerHTML =
+            `Analizuję firmy... (${seconds}s)<br><strong>Proces może potrwać kilka minut.</strong>`;
     }, 1000);
 
     try {
@@ -76,87 +36,111 @@ async function searchLeads() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ keyword, location, limit })
         });
+
         const startData = await response.json();
         const jobId = startData.jobId;
 
-        if (!jobId) throw new Error("n8n nie zwróciło jobId.");
+        if (!jobId) throw new Error("Brak jobId.");
 
-        // Pierwsze sprawdzenie dopiero po 20 sekundach (oszczędność kredytów)
-        setTimeout(() => { pollForResults(jobId, timer); }, 20000);
+        // pierwszy check po 30 sekundach
+        setTimeout(() => {
+            pollForResults(jobId, timer, 0);
+        }, 30000);
 
     } catch (err) {
-        stopUI(timer, "Błąd startu: " + err.message);
+        stopUI(timer);
+        errorDiv.style.display = "block";
+        errorDiv.innerText = "Błąd: " + err.message;
     }
 }
 
-async function pollForResults(jobId, timer) {
-    const checkInterval = setInterval(async () => {
-        try {
-            const response = await fetch(`${URL_CHECK}?jobId=${jobId}`);
-            if (response.ok) {
-                const data = await response.json();
-                
-                // Sprawdzamy czy mamy dane w formacie n8n [ { wynik: "..." } ]
-                if (data && data.length > 0 && data[0].wynik) {
-                    clearInterval(checkInterval);
-                    stopUI(timer);
-                    processAndRender(data[0].wynik);
-                }
-            }
-        } catch (err) { console.log("Czekam..."); }
-    }, 15000); // Sprawdzanie co 15 sekund
-}
+async function pollForResults(jobId, timer, attempt) {
 
-function processAndRender(rawWynik) {
+    // maks 10 prób = oszczędność executions
+    if (attempt > 10) {
+        stopUI(timer);
+        document.getElementById('error').style.display = "block";
+        document.getElementById('error').innerText =
+            "Proces trwa zbyt długo. Sprawdź n8n.";
+        return;
+    }
+
     try {
-        // Matrioszka JSON - rozpakowujemy warstwy
-        let parsed = typeof rawWynik === 'string' ? JSON.parse(rawWynik) : rawWynik;
-        if (parsed.wynik) {
-            parsed = typeof parsed.wynik === 'string' ? JSON.parse(parsed.wynik) : parsed.wynik;
+        const response = await fetch(`${URL_CHECK}?jobId=${jobId}`);
+        if (!response.ok) throw new Error("Brak odpowiedzi");
+
+        const data = await response.json();
+
+        // jeśli backend zwraca już gotową tablicę leadów
+        if (Array.isArray(data) && data.length > 0) {
+            stopUI(timer);
+            renderResults(data);
+            return;
         }
 
-        const items = Array.isArray(parsed) ? parsed : [];
-        const container = document.getElementById('results');
-        
-        items.forEach(item => {
-            // Rozpakowanie pola output z OpenAI
-            let lead = item;
-            if (item.output) {
-                lead = typeof item.output === 'string' ? JSON.parse(item.output) : item.output;
-            }
+        // jeśli backend zwraca { status: "done", data: [...] }
+        if (data.status === "done" && Array.isArray(data.data)) {
+            stopUI(timer);
+            renderResults(data.data);
+            return;
+        }
 
-            const div = document.createElement("div");
-            div.className = "card";
-            const emailStr = Array.isArray(lead.emails) ? lead.emails.join(", ") : (lead.emails || lead.email || "Brak maila");
-
-            div.innerHTML = `
-                <div class="lead-title">${lead.name || "Firma"}</div>
-                <div class="lead-website"><a href="${lead.website}" target="_blank">${lead.website || "#"}</a></div>
-                <div class="section-label">Kontakt</div>
-                <div class="email">${emailStr}</div>
-                <div class="section-label">Analiza AI</div>
-                <div class="description">${lead.description || "Brak opisu."}</div>
-                <div class="section-label">Werdykt dla Górnej Półki</div>
-                <div class="suggestion">${lead.suggestion || "Brak sugestii."}</div>
-            `;
-            container.appendChild(div);
-        });
-    } catch (e) {
-        console.error("Błąd parsowania", e);
-        document.getElementById('error').style.display = "block";
-        document.getElementById('error').innerText = "Wystąpił błąd przy wyświetlaniu danych.";
+    } catch (err) {
+        console.log("Czekam na dane...");
     }
+
+    // kolejne sprawdzenie po 20 sekundach
+    setTimeout(() => {
+        pollForResults(jobId, timer, attempt + 1);
+    }, 20000);
 }
 
-function stopUI(timer, errorMsg = null) {
+function renderResults(items) {
+    const container = document.getElementById('results');
+    container.innerHTML = "";
+
+    if (!Array.isArray(items) || items.length === 0) {
+        container.innerHTML = "<p>Brak wyników.</p>";
+        return;
+    }
+
+    items.forEach(lead => {
+        const div = document.createElement("div");
+        div.className = "card";
+
+        const emails = Array.isArray(lead.emails)
+            ? lead.emails.join(", ")
+            : (lead.email || "Brak maila");
+
+        div.innerHTML = `
+            <div class="lead-title">${lead.name || "Firma"}</div>
+            <div class="lead-website">
+                <a href="${lead.website || "#"}" target="_blank">
+                    ${lead.website || "Brak strony"}
+                </a>
+            </div>
+
+            <div class="section-label">Kontakt Email</div>
+            <div class="email">${emails}</div>
+
+            <div class="section-label">Analiza AI</div>
+            <div class="description">
+                ${lead.description || "Brak opisu."}
+            </div>
+
+            <div class="section-label">Werdykt dla Górnej Półki</div>
+            <div class="suggestion">
+                ${lead.suggestion || "Brak sugestii."}
+            </div>
+        `;
+
+        container.appendChild(div);
+    });
+}
+
+function stopUI(timer) {
     clearInterval(timer);
     document.getElementById('loaderContainer').style.display = "none";
     document.getElementById('searchBtn').disabled = false;
-    if (errorMsg) {
-        document.getElementById('error').style.display = "block";
-        document.getElementById('error').innerText = errorMsg;
-    }
 }
 </script>
-</body>
-</html>
