@@ -1,4 +1,117 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lead Finder dla Górnej Półki</title>
+
+<style>
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f7f7f7;
+    margin: 0;
+    padding: 40px 20px;
+    display: flex;
+    justify-content: center;
+}
+.container {
+    width: 100%;
+    max-width: 900px;
+}
+h1 {
+    font-weight: 700;
+    margin-bottom: 30px;
+    color: #111;
+}
+.card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+input, button {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+    margin-bottom: 16px;
+    font-size: 15px;
+    box-sizing: border-box;
+}
+button {
+    background: #000;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+}
+button:disabled {
+    background: #999;
+}
+.loader-container {
+    display: none;
+    text-align: center;
+    margin: 30px 0;
+}
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #000;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 15px;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+.section-label {
+    font-size: 11px;
+    font-weight: 700;
+    margin-top: 15px;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    color: #888;
+}
+.email, .description, .suggestion {
+    font-size: 14px;
+    line-height: 1.5;
+}
+.error {
+    color: #ff3b30;
+    margin-top: 10px;
+    display: none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h1>Lead Finder dla Górnej Półki</h1>
+
+<div class="card">
+    <input id="keyword" placeholder="Fraza (np. architekt)">
+    <input id="location" placeholder="Miasto (np. Warszawa)">
+    <input id="limit" type="number" value="3" min="1" max="10">
+    <button id="searchBtn" onclick="searchLeads()">Rozpocznij analizę</button>
+
+    <div class="loader-container" id="loaderContainer">
+        <div class="spinner"></div>
+        <div id="loaderText">Analizuję firmy...</div>
+    </div>
+
+    <div class="error" id="error"></div>
+</div>
+
+<div id="results"></div>
+</div>
+
 <script>
+
+// UZUPEŁNIJ SWOJE WEBHOOKI
 const URL_START = "https://mz01.app.n8n.cloud/webhook/lead-search";
 const URL_CHECK = "https://mz01.app.n8n.cloud/webhook/sprawdz-wynik";
 
@@ -14,92 +127,70 @@ async function searchLeads() {
 
     const btn = document.getElementById('searchBtn');
     const loader = document.getElementById('loaderContainer');
-    const loaderText = document.getElementById('loaderText');
-    const resultsDiv = document.getElementById('results');
-    const errorDiv = document.getElementById('error');
+    const results = document.getElementById('results');
+    const error = document.getElementById('error');
 
     btn.disabled = true;
     loader.style.display = "block";
-    errorDiv.style.display = "none";
-    resultsDiv.innerHTML = "";
-
-    let seconds = 0;
-    const timer = setInterval(() => {
-        seconds += 1;
-        loaderText.innerHTML =
-            `Analizuję firmy... (${seconds}s)<br><strong>Proces może potrwać kilka minut.</strong>`;
-    }, 1000);
+    results.innerHTML = "";
+    error.style.display = "none";
 
     try {
-        const response = await fetch(URL_START, {
+        const res = await fetch(URL_START, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ keyword, location, limit })
         });
 
-        const startData = await response.json();
+        const startData = await res.json();
         const jobId = startData.jobId;
 
         if (!jobId) throw new Error("Brak jobId.");
 
-        // pierwszy check po 30 sekundach
-        setTimeout(() => {
-            pollForResults(jobId, timer, 0);
-        }, 30000);
+        setTimeout(() => poll(jobId, 0), 30000);
 
     } catch (err) {
-        stopUI(timer);
-        errorDiv.style.display = "block";
-        errorDiv.innerText = "Błąd: " + err.message;
+        showError("Błąd startu: " + err.message);
     }
 }
 
-async function pollForResults(jobId, timer, attempt) {
+async function poll(jobId, attempt) {
 
-    // maks 10 prób = oszczędność executions
     if (attempt > 10) {
-        stopUI(timer);
-        document.getElementById('error').style.display = "block";
-        document.getElementById('error').innerText =
-            "Proces trwa zbyt długo. Sprawdź n8n.";
+        showError("Proces trwa zbyt długo.");
         return;
     }
 
     try {
-        const response = await fetch(`${URL_CHECK}?jobId=${jobId}`);
-        if (!response.ok) throw new Error("Brak odpowiedzi");
+        const res = await fetch(`${URL_CHECK}?jobId=${jobId}`);
+        const data = await res.json();
 
-        const data = await response.json();
-
-        // jeśli backend zwraca już gotową tablicę leadów
-        if (Array.isArray(data) && data.length > 0) {
-            stopUI(timer);
+        // Jeśli backend zwraca czystą tablicę
+        if (Array.isArray(data)) {
+            stopUI();
             renderResults(data);
             return;
         }
 
-        // jeśli backend zwraca { status: "done", data: [...] }
+        // Jeśli zwraca status + data
         if (data.status === "done" && Array.isArray(data.data)) {
-            stopUI(timer);
+            stopUI();
             renderResults(data.data);
             return;
         }
 
-    } catch (err) {
-        console.log("Czekam na dane...");
+    } catch (e) {
+        console.log("Czekam...");
     }
 
-    // kolejne sprawdzenie po 20 sekundach
-    setTimeout(() => {
-        pollForResults(jobId, timer, attempt + 1);
-    }, 20000);
+    setTimeout(() => poll(jobId, attempt + 1), 20000);
 }
 
 function renderResults(items) {
     const container = document.getElementById('results');
     container.innerHTML = "";
 
-    if (!Array.isArray(items) || items.length === 0) {
+    if (!items || !Array.isArray(items) || items.length === 0) {
         container.innerHTML = "<p>Brak wyników.</p>";
         return;
     }
@@ -110,37 +201,45 @@ function renderResults(items) {
 
         const emails = Array.isArray(lead.emails)
             ? lead.emails.join(", ")
-            : (lead.email || "Brak maila");
+            : "Brak maila";
 
         div.innerHTML = `
-            <div class="lead-title">${lead.name || "Firma"}</div>
-            <div class="lead-website">
+            <div style="font-weight:600;font-size:18px;margin-bottom:6px;">
+                ${lead.name || "Firma"}
+            </div>
+            <div style="margin-bottom:10px;">
                 <a href="${lead.website || "#"}" target="_blank">
                     ${lead.website || "Brak strony"}
                 </a>
             </div>
 
-            <div class="section-label">Kontakt Email</div>
+            <div class="section-label">Email</div>
             <div class="email">${emails}</div>
 
-            <div class="section-label">Analiza AI</div>
-            <div class="description">
-                ${lead.description || "Brak opisu."}
-            </div>
+            <div class="section-label">Opis</div>
+            <div class="description">${lead.description || ""}</div>
 
-            <div class="section-label">Werdykt dla Górnej Półki</div>
-            <div class="suggestion">
-                ${lead.suggestion || "Brak sugestii."}
-            </div>
+            <div class="section-label">Ocena</div>
+            <div class="suggestion">${lead.suggestion || ""}</div>
         `;
 
         container.appendChild(div);
     });
 }
 
-function stopUI(timer) {
-    clearInterval(timer);
+function stopUI() {
     document.getElementById('loaderContainer').style.display = "none";
     document.getElementById('searchBtn').disabled = false;
 }
+
+function showError(msg) {
+    stopUI();
+    const error = document.getElementById('error');
+    error.style.display = "block";
+    error.innerText = msg;
+}
+
 </script>
+
+</body>
+</html>
