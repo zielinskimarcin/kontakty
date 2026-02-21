@@ -163,7 +163,13 @@ async function searchLeads() {
             throw new Error("Błąd odpowiedzi serwera");
         }
 
-        const data = await response.json();
+        const raw = await response.json();
+console.log("RAW RESPONSE:", raw);
+
+const data = Array.isArray(raw) ? raw : raw.data || raw.json || [];
+console.log("PARSED DATA:", data);
+
+renderResults(data);
 
         renderResults(data);
 
