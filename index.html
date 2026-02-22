@@ -174,7 +174,7 @@ button:disabled { background:#999; }
 
 <h1>
     Leady Górna Półka
-    <span class="info-icon" onclick="openInstruction()">ⓘ Instrukcja</span>
+    <span class="info-icon" onclick="openInstruction()">ⓘ Uwagi</span>
 </h1>
 
 <div class="card">
@@ -217,21 +217,20 @@ button:disabled { background:#999; }
 <!-- POPUP -->
 <div id="instructionPopup" class="popup-overlay">
     <div class="popup">
-        <h2>Instrukcja</h2>
+        <h2>Uwagi</h2>
         <p>
-        Strona znajduje firmy po adresach w google maps dla podanych kryteriów i wyszukuje na ich stronach emaile do kontaktu + sporządza krótki opis czym się zajmują oraz sugestię czy to dobry lead dla Górnej Półki. 
+       W fazie testowej maksymalnie 10 wyników jednocześnie. 
+
+       W praktyce możliwe jest wypisanie 500+ wyników na raz.
         </p>
         <p>
-        W fazie testowej maksymalnie 10 wyników na raz, ale możliwe jest wypisanie kilkuset wyników w jednym wyszukaniu.
+        Im bardziej precyzyjna fraza i lokalizacja tym lepsze wyniki (np. Warszawa Śródmieście, Mokotów itp.)
         </p>
         <p>
-        Im bardziej precyzyjna fraza i lokalizacja, tym lepsze wyniki (przy większych lokalizacjach zaleca się dopisanie np. Warszawa Śródmieście dla lepszych wyników)
+        Zagraniczne Leady działają super po angielsku (np. Designer Paris nie Projektant Paryż.)
         </p>
         <p>
-        Bardzo dobrze obsługuje zagraniczne leady, trzeba tylko wpisać po angielsku np. Interior Designer Paris zamiast Projektowanie wnętrz Paryż.
-        </p>
-        <p>
-        Proces może potrwać do kilku minut, w zależności od ilości. 
+        Proces może potrwać do kilku minut, pracuję nad optymalizacją.
         </p>
         <button onclick="closeInstruction()">Rozumiem</button>
     </div>
