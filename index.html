@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Leady Górna Półka</title>
 
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
 <style>
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -14,15 +16,8 @@ body {
     display: flex;
     justify-content: center;
 }
-.container {
-    width: 100%;
-    max-width: 920px;
-}
-h1 {
-    font-weight: 800;
-    margin-bottom: 10px;
-    color: #111;
-}
+.container { width:100%; max-width:920px; }
+h1 { font-weight:800; margin-bottom:10px; }
 .test-badge {
     display:inline-block;
     background:#000;
@@ -41,54 +36,65 @@ h1 {
     font-size:14px;
     line-height:1.6;
 }
-details summary {
-    cursor:pointer;
-    font-weight:600;
-}
+details summary { cursor:pointer; font-weight:600; }
 .card {
-    background: #ffffff;
-    border-radius: 18px;
-    padding: 24px;
-    margin-bottom: 20px;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    background:#fff;
+    border-radius:18px;
+    padding:24px;
+    margin-bottom:20px;
+    box-shadow:0 6px 18px rgba(0,0,0,0.06);
 }
-input, select, button {
-    width: 100%;
-    padding: 14px;
-    border-radius: 14px;
-    border: 1px solid #ddd;
-    margin-bottom: 16px;
-    font-size: 15px;
-    box-sizing: border-box;
+input, button {
+    width:100%;
+    padding:14px;
+    border-radius:14px;
+    border:1px solid #ddd;
+    margin-bottom:16px;
+    font-size:15px;
+    box-sizing:border-box;
 }
 button {
-    background: #000;
-    color: #fff;
-    border: none;
-    cursor: pointer;
-    font-weight: 700;
-    transition: 0.2s;
+    background:#000;
+    color:#fff;
+    border:none;
+    cursor:pointer;
+    font-weight:700;
 }
 button:hover { background:#222; }
 button:disabled { background:#999; }
 
-.loader-container {
-    display: none;
-    text-align: center;
-    margin: 30px 0;
+.limit-group {
+    display:flex;
+    gap:8px;
+    margin-bottom:16px;
 }
+.limit-btn {
+    flex:1;
+    padding:10px;
+    border-radius:10px;
+    border:1px solid #ddd;
+    background:#fff;
+    cursor:pointer;
+    font-weight:600;
+    transition:0.2s;
+}
+.limit-btn.active {
+    background:#000;
+    color:#fff;
+    border-color:#000;
+}
+
+.loader-container { display:none; text-align:center; margin:30px 0; }
 .spinner {
-    width: 44px;
-    height: 44px;
-    border: 4px solid #eee;
-    border-top: 4px solid #000;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin: 0 auto 15px;
+    width:44px; height:44px;
+    border:4px solid #eee;
+    border-top:4px solid #000;
+    border-radius:50%;
+    animation:spin 1s linear infinite;
+    margin:0 auto 15px;
 }
 .progress-bar {
-    width:100%;
-    height:8px;
+    width:100%; height:8px;
     background:#eee;
     border-radius:8px;
     overflow:hidden;
@@ -100,33 +106,27 @@ button:disabled { background:#999; }
     background:#000;
     transition:width 1s linear;
 }
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
+@keyframes spin { 0%{transform:rotate(0deg);} 100%{transform:rotate(360deg);} }
+
 .section-label {
-    font-size: 11px;
-    font-weight: 700;
-    margin-top: 15px;
-    margin-bottom: 4px;
-    text-transform: uppercase;
-    color: #888;
+    font-size:11px;
+    font-weight:700;
+    margin-top:15px;
+    margin-bottom:4px;
+    text-transform:uppercase;
+    color:#888;
 }
-.email, .description, .suggestion {
-    font-size: 14px;
-    line-height: 1.6;
+.email,.description,.suggestion { font-size:14px; line-height:1.6; }
+.error { color:#ff3b30; margin-top:10px; display:none; }
+
+.download-btn {
+    background:#1a73e8;
 }
-.error {
-    color: #ff3b30;
-    margin-top: 10px;
-    display: none;
-    font-size:14px;
-}
+.download-btn:hover { background:#0f5bd6; }
 </style>
 </head>
 
 <body>
-
 <div class="container">
 
 <h1>Leady Górna Półka <span class="test-badge">FAZA TESTOWA</span></h1>
@@ -135,34 +135,31 @@ button:disabled { background:#999; }
 <details>
 <summary>Jak to działa?</summary>
 <br>
-Strona znajduje firmy na podstawie adresów w Google Maps według podanych kryteriów.  
-Następnie wyszukuje na ich stronach internetowych adresy email do kontaktu, sporządza krótki opis czym się zajmują oraz generuje sugestię – mocne i słabe strony oraz ocenę czy to dobry lead dla Górnej Półki.<br><br>
-
-<strong>Faza testowa:</strong> aktualnie możliwe maksymalnie 10 wyników na raz (technicznie możliwe jest kilkaset wyników w jednym wyszukaniu).<br><br>
-
-Im bardziej precyzyjna fraza, tym lepiej wyselekcjonowane leady.  
-Dla większych miast warto dopisać np. „Warszawa Śródmieście” dla lepszych wyników.<br><br>
-
-Strona bardzo dobrze obsługuje zagraniczne leady – wpisuj po angielsku, np. „interior designer Paris”.<br><br>
-
-Wyszukiwanie może potrwać kilka minut – pracuję nad optymalizacją.<br><br>
-
-Jeżeli pojawi się błąd – prawdopodobnie skończyły się kredyty API.
+Strona znajduje firmy w Google Maps według podanych kryteriów.  
+Wyszukuje na ich stronach email, generuje opis działalności oraz ocenę dla Górnej Półki.<br><br>
+Faza testowa – maksymalnie 10 wyników jednocześnie (technicznie możliwe kilkaset).<br><br>
+Im bardziej precyzyjna fraza i lokalizacja, tym lepsze leady.<br>
+Obsługuje też zagraniczne leady (np. "interior designer Paris").<br><br>
+Proces może potrwać kilka minut.<br>
+Błąd oznacza zwykle brak kredytów API.
 </details>
 </div>
 
 <div class="card">
     <input id="keyword" placeholder="Fraza (np. architekt wnętrz)">
     <input id="location" placeholder="Lokalizacja (np. Warszawa Śródmieście)">
-    
-    <select id="limit">
-        <option value="1">1 lead</option>
-        <option value="2">2 leady</option>
-        <option value="3" selected>3 leady</option>
-        <option value="4">4 leady</option>
-        <option value="5">5 leadów</option>
-        <option value="10">10 leadów</option>
-    </select>
+
+    <!-- ZOSTAWIAMY id="limit" DLA LOGIKI -->
+    <input type="hidden" id="limit" value="3">
+
+    <div class="limit-group">
+        <div class="limit-btn" onclick="setLimit(1)">1</div>
+        <div class="limit-btn" onclick="setLimit(2)">2</div>
+        <div class="limit-btn active" onclick="setLimit(3)">3</div>
+        <div class="limit-btn" onclick="setLimit(4)">4</div>
+        <div class="limit-btn" onclick="setLimit(5)">5</div>
+        <div class="limit-btn" onclick="setLimit(10)">10</div>
+    </div>
 
     <button id="searchBtn" onclick="searchLeads()">Wyszukaj leady</button>
 
@@ -180,15 +177,29 @@ Jeżeli pojawi się błąd – prawdopodobnie skończyły się kredyty API.
 </div>
 
 <div id="results"></div>
+
+<button id="downloadBtn" class="download-btn" style="display:none;" onclick="downloadExcel()">
+    Pobierz Excel
+</button>
+
 </div>
 
 <script>
+
+// === TWOJA ORYGINALNA LOGIKA (NIE ZMIENIONA) ===
 
 const URL_START = "https://mz01.app.n8n.cloud/webhook/lead-search";
 const URL_CHECK = "https://mz01.app.n8n.cloud/webhook/sprawdz-wynik";
 
 let timerInterval;
 let progressInterval;
+let lastResults = [];
+
+function setLimit(val){
+    document.getElementById("limit").value = val;
+    document.querySelectorAll(".limit-btn").forEach(b=>b.classList.remove("active"));
+    event.target.classList.add("active");
+}
 
 async function searchLeads() {
 
@@ -212,6 +223,7 @@ async function searchLeads() {
     loader.style.display = "block";
     results.innerHTML = "";
     error.style.display = "none";
+    document.getElementById("downloadBtn").style.display="none";
 
     let seconds = 0;
     timerInterval = setInterval(() => {
@@ -277,6 +289,9 @@ async function poll(jobId, attempt) {
 }
 
 function renderResults(items) {
+    lastResults = items;
+    document.getElementById("downloadBtn").style.display="block";
+
     const container = document.getElementById('results');
     container.innerHTML = "";
 
@@ -302,19 +317,30 @@ function renderResults(items) {
                     ${lead.website || "Brak strony"}
                 </a>
             </div>
-
             <div class="section-label">Email</div>
             <div class="email">${emails}</div>
-
             <div class="section-label">Profil działalności</div>
             <div class="description">${lead.description || ""}</div>
-
             <div class="section-label">Ocena dla Górnej Półki</div>
             <div class="suggestion">${lead.suggestion || ""}</div>
         `;
-
         container.appendChild(div);
     });
+}
+
+function downloadExcel(){
+    const data = lastResults.map(l=>({
+        Nazwa:l.name,
+        Strona:l.website,
+        Email:(l.emails||[]).join(", "),
+        Opis:l.description,
+        Ocena:l.suggestion
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Leady");
+    XLSX.writeFile(wb, "Leady_Gorna_Polka.xlsx");
 }
 
 function stopUI() {
@@ -333,6 +359,5 @@ function showError(msg) {
 }
 
 </script>
-
 </body>
 </html>
