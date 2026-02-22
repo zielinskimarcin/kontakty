@@ -17,26 +17,26 @@ body {
     justify-content: center;
 }
 .container { width:100%; max-width:920px; }
-h1 { font-weight:800; margin-bottom:10px; }
-.test-badge {
-    display:inline-block;
-    background:#000;
-    color:#fff;
-    font-size:11px;
-    padding:4px 8px;
-    border-radius:6px;
-    margin-left:10px;
+
+h1 {
+    font-weight:800;
+    margin-bottom:25px;
+    display:flex;
+    align-items:center;
+    gap:10px;
 }
-.details-box {
-    background:#fff;
-    border-radius:14px;
-    padding:16px 20px;
-    margin-bottom:20px;
-    box-shadow:0 4px 12px rgba(0,0,0,0.05);
-    font-size:14px;
-    line-height:1.6;
+
+.info-icon {
+    font-size:13px;
+    cursor:pointer;
+    color:#555;
+    background:#eee;
+    padding:6px 10px;
+    border-radius:20px;
+    transition:0.2s;
 }
-details summary { cursor:pointer; font-weight:600; }
+.info-icon:hover { background:#ddd; }
+
 .card {
     background:#fff;
     border-radius:18px;
@@ -44,6 +44,7 @@ details summary { cursor:pointer; font-weight:600; }
     margin-bottom:20px;
     box-shadow:0 6px 18px rgba(0,0,0,0.06);
 }
+
 input, button {
     width:100%;
     padding:14px;
@@ -53,6 +54,7 @@ input, button {
     font-size:15px;
     box-sizing:border-box;
 }
+
 button {
     background:#000;
     color:#fff;
@@ -123,33 +125,42 @@ button:disabled { background:#999; }
     background:#1a73e8;
 }
 .download-btn:hover { background:#0f5bd6; }
+
+/* Popup */
+.popup-overlay {
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.4);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:999;
+}
+.popup {
+    background:#fff;
+    padding:30px;
+    border-radius:16px;
+    max-width:600px;
+    width:90%;
+    box-shadow:0 10px 40px rgba(0,0,0,0.2);
+}
+.popup h2 { margin-top:0; }
+.popup button { margin-top:20px; }
 </style>
 </head>
 
 <body>
 <div class="container">
 
-<h1>Leady Górna Półka <span class="test-badge">FAZA TESTOWA</span></h1>
-
-<div class="details-box">
-<details>
-<summary>Jak to działa?</summary>
-<br>
-Strona znajduje firmy w Google Maps według podanych kryteriów.  
-Wyszukuje na ich stronach email, generuje opis działalności oraz ocenę dla Górnej Półki.<br><br>
-Faza testowa – maksymalnie 10 wyników jednocześnie (technicznie możliwe kilkaset).<br><br>
-Im bardziej precyzyjna fraza i lokalizacja, tym lepsze leady.<br>
-Obsługuje też zagraniczne leady (np. "interior designer Paris").<br><br>
-Proces może potrwać kilka minut.<br>
-Błąd oznacza zwykle brak kredytów API.
-</details>
-</div>
+<h1>
+    Leady Górna Półka
+    <span class="info-icon" onclick="openInstruction()">ⓘ Instrukcja</span>
+</h1>
 
 <div class="card">
     <input id="keyword" placeholder="Fraza (np. architekt wnętrz)">
     <input id="location" placeholder="Lokalizacja (np. Warszawa Śródmieście)">
 
-    <!-- ZOSTAWIAMY id="limit" DLA LOGIKI -->
     <input type="hidden" id="limit" value="3">
 
     <div class="limit-group">
@@ -184,9 +195,37 @@ Błąd oznacza zwykle brak kredytów API.
 
 </div>
 
+<!-- POPUP INSTRUKCJA -->
+<div id="instructionPopup" class="popup-overlay">
+    <div class="popup">
+        <h2>Instrukcja</h2>
+        <p>
+        Strona znajduje firmy w Google Maps według podanych kryteriów.
+        Następnie wyszukuje email kontaktowy, generuje opis działalności oraz ocenę czy to dobry lead dla Górnej Półki.
+        </p>
+        <p>
+        Maksymalnie 10 leadów jednocześnie.  
+        Im bardziej precyzyjna fraza i lokalizacja, tym lepsze wyniki.
+        </p>
+        <p>
+        Obsługuje także zagraniczne leady (np. "interior designer Paris").
+        </p>
+        <p>
+        Proces może potrwać kilka minut.  
+        Jeżeli pojawi się błąd – prawdopodobnie skończyły się kredyty API.
+        </p>
+        <button onclick="closeInstruction()">Rozumiem</button>
+    </div>
+</div>
+
 <script>
 
-// === TWOJA ORYGINALNA LOGIKA (NIE ZMIENIONA) ===
+function closeInstruction(){
+    document.getElementById("instructionPopup").style.display="none";
+}
+function openInstruction(){
+    document.getElementById("instructionPopup").style.display="flex";
+}
 
 const URL_START = "https://mz01.app.n8n.cloud/webhook/lead-search";
 const URL_CHECK = "https://mz01.app.n8n.cloud/webhook/sprawdz-wynik";
