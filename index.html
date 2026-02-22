@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lead Finder dla Górnej Półki</title>
+<title>Leady Górna Półka</title>
 
 <style>
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: #f7f7f7;
+    background: #f5f6f8;
     margin: 0;
     padding: 40px 20px;
     display: flex;
@@ -16,24 +16,46 @@ body {
 }
 .container {
     width: 100%;
-    max-width: 900px;
+    max-width: 920px;
 }
 h1 {
-    font-weight: 700;
-    margin-bottom: 30px;
+    font-weight: 800;
+    margin-bottom: 10px;
     color: #111;
+}
+.test-badge {
+    display:inline-block;
+    background:#000;
+    color:#fff;
+    font-size:11px;
+    padding:4px 8px;
+    border-radius:6px;
+    margin-left:10px;
+}
+.details-box {
+    background:#fff;
+    border-radius:14px;
+    padding:16px 20px;
+    margin-bottom:20px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.05);
+    font-size:14px;
+    line-height:1.6;
+}
+details summary {
+    cursor:pointer;
+    font-weight:600;
 }
 .card {
     background: #ffffff;
-    border-radius: 16px;
+    border-radius: 18px;
     padding: 24px;
     margin-bottom: 20px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
 }
-input, button {
+input, select, button {
     width: 100%;
     padding: 14px;
-    border-radius: 12px;
+    border-radius: 14px;
     border: 1px solid #ddd;
     margin-bottom: 16px;
     font-size: 15px;
@@ -44,24 +66,39 @@ button {
     color: #fff;
     border: none;
     cursor: pointer;
-    font-weight: 600;
+    font-weight: 700;
+    transition: 0.2s;
 }
-button:disabled {
-    background: #999;
-}
+button:hover { background:#222; }
+button:disabled { background:#999; }
+
 .loader-container {
     display: none;
     text-align: center;
     margin: 30px 0;
 }
 .spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid #f3f3f3;
+    width: 44px;
+    height: 44px;
+    border: 4px solid #eee;
     border-top: 4px solid #000;
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin: 0 auto 15px;
+}
+.progress-bar {
+    width:100%;
+    height:8px;
+    background:#eee;
+    border-radius:8px;
+    overflow:hidden;
+    margin-top:15px;
+}
+.progress {
+    height:100%;
+    width:0%;
+    background:#000;
+    transition:width 1s linear;
 }
 @keyframes spin {
     0% { transform: rotate(0deg); }
@@ -77,12 +114,13 @@ button:disabled {
 }
 .email, .description, .suggestion {
     font-size: 14px;
-    line-height: 1.5;
+    line-height: 1.6;
 }
 .error {
     color: #ff3b30;
     margin-top: 10px;
     display: none;
+    font-size:14px;
 }
 </style>
 </head>
@@ -90,17 +128,52 @@ button:disabled {
 <body>
 
 <div class="container">
-<h1>Lead Finder dla Górnej Półki</h1>
+
+<h1>Leady Górna Półka <span class="test-badge">FAZA TESTOWA</span></h1>
+
+<div class="details-box">
+<details>
+<summary>Jak to działa?</summary>
+<br>
+Strona znajduje firmy na podstawie adresów w Google Maps według podanych kryteriów.  
+Następnie wyszukuje na ich stronach internetowych adresy email do kontaktu, sporządza krótki opis czym się zajmują oraz generuje sugestię – mocne i słabe strony oraz ocenę czy to dobry lead dla Górnej Półki.<br><br>
+
+<strong>Faza testowa:</strong> aktualnie możliwe maksymalnie 10 wyników na raz (technicznie możliwe jest kilkaset wyników w jednym wyszukaniu).<br><br>
+
+Im bardziej precyzyjna fraza, tym lepiej wyselekcjonowane leady.  
+Dla większych miast warto dopisać np. „Warszawa Śródmieście” dla lepszych wyników.<br><br>
+
+Strona bardzo dobrze obsługuje zagraniczne leady – wpisuj po angielsku, np. „interior designer Paris”.<br><br>
+
+Wyszukiwanie może potrwać kilka minut – pracuję nad optymalizacją.<br><br>
+
+Jeżeli pojawi się błąd – prawdopodobnie skończyły się kredyty API.
+</details>
+</div>
 
 <div class="card">
-    <input id="keyword" placeholder="Fraza (np. architekt)">
-    <input id="location" placeholder="Miasto (np. Warszawa)">
-    <input id="limit" type="number" value="3" min="1" max="10">
-    <button id="searchBtn" onclick="searchLeads()">Rozpocznij analizę</button>
+    <input id="keyword" placeholder="Fraza (np. architekt wnętrz)">
+    <input id="location" placeholder="Lokalizacja (np. Warszawa Śródmieście)">
+    
+    <select id="limit">
+        <option value="1">1 lead</option>
+        <option value="2">2 leady</option>
+        <option value="3" selected>3 leady</option>
+        <option value="4">4 leady</option>
+        <option value="5">5 leadów</option>
+        <option value="10">10 leadów</option>
+    </select>
+
+    <button id="searchBtn" onclick="searchLeads()">Wyszukaj leady</button>
 
     <div class="loader-container" id="loaderContainer">
         <div class="spinner"></div>
-        <div id="loaderText">Analizuję firmy...</div>
+        <div id="loaderText">
+            Trwa wyszukiwanie i ocena leadów... (0s)
+        </div>
+        <div class="progress-bar">
+            <div class="progress" id="progressBar"></div>
+        </div>
     </div>
 
     <div class="error" id="error"></div>
@@ -111,17 +184,20 @@ button:disabled {
 
 <script>
 
-// UZUPEŁNIJ SWOJE WEBHOOKI
 const URL_START = "https://mz01.app.n8n.cloud/webhook/lead-search";
 const URL_CHECK = "https://mz01.app.n8n.cloud/webhook/sprawdz-wynik";
 
+let timerInterval;
+let progressInterval;
+
 async function searchLeads() {
+
     const keyword = document.getElementById('keyword').value.trim();
     const location = document.getElementById('location').value.trim();
     const limit = document.getElementById('limit').value;
 
     if (!keyword || !location) {
-        alert("Wpisz frazę i miasto.");
+        alert("Uzupełnij frazę i lokalizację.");
         return;
     }
 
@@ -129,11 +205,27 @@ async function searchLeads() {
     const loader = document.getElementById('loaderContainer');
     const results = document.getElementById('results');
     const error = document.getElementById('error');
+    const loaderText = document.getElementById('loaderText');
+    const progressBar = document.getElementById('progressBar');
 
     btn.disabled = true;
     loader.style.display = "block";
     results.innerHTML = "";
     error.style.display = "none";
+
+    let seconds = 0;
+    timerInterval = setInterval(() => {
+        seconds++;
+        loaderText.innerHTML = `Trwa wyszukiwanie i ocena leadów... (${seconds}s)<br>Może to potrwać kilka minut.`;
+    }, 1000);
+
+    let progress = 0;
+    progressInterval = setInterval(() => {
+        if (progress < 95) {
+            progress += 1;
+            progressBar.style.width = progress + "%";
+        }
+    }, 1500);
 
     try {
         const res = await fetch(URL_START, {
@@ -150,7 +242,7 @@ async function searchLeads() {
         setTimeout(() => poll(jobId, 0), 30000);
 
     } catch (err) {
-        showError("Błąd startu: " + err.message);
+        showError("Błąd: " + err.message);
     }
 }
 
@@ -165,14 +257,12 @@ async function poll(jobId, attempt) {
         const res = await fetch(`${URL_CHECK}?jobId=${jobId}`);
         const data = await res.json();
 
-        // Jeśli backend zwraca czystą tablicę
         if (Array.isArray(data)) {
             stopUI();
             renderResults(data);
             return;
         }
 
-        // Jeśli zwraca status + data
         if (data.status === "done" && Array.isArray(data.data)) {
             stopUI();
             renderResults(data.data);
@@ -204,7 +294,7 @@ function renderResults(items) {
             : "Brak maila";
 
         div.innerHTML = `
-            <div style="font-weight:600;font-size:18px;margin-bottom:6px;">
+            <div style="font-weight:700;font-size:18px;margin-bottom:6px;">
                 ${lead.name || "Firma"}
             </div>
             <div style="margin-bottom:10px;">
@@ -216,10 +306,10 @@ function renderResults(items) {
             <div class="section-label">Email</div>
             <div class="email">${emails}</div>
 
-            <div class="section-label">Opis</div>
+            <div class="section-label">Profil działalności</div>
             <div class="description">${lead.description || ""}</div>
 
-            <div class="section-label">Ocena</div>
+            <div class="section-label">Ocena dla Górnej Półki</div>
             <div class="suggestion">${lead.suggestion || ""}</div>
         `;
 
@@ -228,8 +318,11 @@ function renderResults(items) {
 }
 
 function stopUI() {
+    clearInterval(timerInterval);
+    clearInterval(progressInterval);
     document.getElementById('loaderContainer').style.display = "none";
     document.getElementById('searchBtn').disabled = false;
+    document.getElementById('progressBar').style.width = "100%";
 }
 
 function showError(msg) {
