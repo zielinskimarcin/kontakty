@@ -185,9 +185,7 @@ button:disabled { background:#999; }
         <label class="limit-label">Ilość leadów</label>
         <select id="limit" class="limit-select">
             <option value="1">1 lead</option>
-            <option value="2">2 leady</option>
             <option value="3" selected>3 leady</option>
-            <option value="4">4 leady</option>
             <option value="5">5 leadów</option>
             <option value="10">10 leadów</option>
         </select>
@@ -221,19 +219,19 @@ button:disabled { background:#999; }
     <div class="popup">
         <h2>Instrukcja</h2>
         <p>
-        Strona znajduje firmy w Google Maps według podanych kryteriów.
-        Wyszukuje email kontaktowy, generuje opis działalności oraz ocenę czy to dobry lead dla Górnej Półki.
+        Strona znajduje firmy po adresach w google maps dla podanych kryteriów i wyszukuje na ich stronach emaile do kontaktu + sporządza krótki opis czym się zajmują oraz sugestię czy to dobry lead dla Górnej Półki. 
         </p>
         <p>
-        Maksymalnie 10 leadów jednocześnie.
-        Im bardziej precyzyjna fraza i lokalizacja, tym lepsze wyniki.
+        W fazie testowej maksymalnie 10 wyników na raz, ale możliwe jest wypisanie kilkuset wyników w jednym wyszukaniu.
         </p>
         <p>
-        Obsługuje zagraniczne leady (np. "interior designer Paris").
+        Im bardziej precyzyjna fraza i lokalizacja, tym lepsze wyniki (przy większych lokalizacjach zaleca się dopisanie np. Warszawa Śródmieście dla lepszych wyników)
         </p>
         <p>
-        Proces może potrwać kilka minut.
-        Jeżeli pojawi się błąd – prawdopodobnie skończyły się kredyty API.
+        Bardzo dobrze obsługuje zagraniczne leady, trzeba tylko wpisać po angielsku np. Interior Designer Paris zamiast Projektowanie wnętrz Paryż.
+        </p>
+        <p>
+        Proces może potrwać do kilku minut, w zależności od ilości. 
         </p>
         <button onclick="closeInstruction()">Rozumiem</button>
     </div>
